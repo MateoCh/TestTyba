@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:test_tyba/providers/authProvider.dart';
+import 'package:test_tyba/providers/bottomNavigationProvider.dart';
+import 'package:test_tyba/providers/restaurantsProvider.dart';
 import 'package:test_tyba/screens/authScreen.dart';
 import 'package:test_tyba/screens/loadingScreen.dart';
 import 'screens/app.dart';
@@ -15,10 +17,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (ctx) => AuthProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (ctx) => AuthProvider()),
+        ChangeNotifierProvider(create: (ctx) => RestaurantsProvider()),
+        ChangeNotifierProvider(create: (ctx) => BottomNavigationProvider()),
+      ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) => MaterialApp(
-          title: 'Flutter Demo',
+          title: 'Test Tyba',
           theme: ThemeData(
               fontFamily: 'Roboto',
               colorScheme: mainColorScheme,

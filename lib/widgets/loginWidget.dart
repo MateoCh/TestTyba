@@ -10,7 +10,7 @@ import 'dart:convert';
 import 'package:test_tyba/widgets/eyeToggle.dart';
 
 /**
- * Wdiget with the forms for user authetication
+ * Widget with the forms for user authetication
  */
 class LoginWidget extends StatefulWidget {
   LoginWidget({Key? key}) : super(key: key);
@@ -29,6 +29,8 @@ class _LoginWidgetState extends State<LoginWidget> {
   final GlobalKey<FormState> _formKey = GlobalKey();
   final TextEditingController _pswdController = TextEditingController();
   AuthInfo _authData = new AuthInfo(email: '', password: '');
+  final FocusNode passwordFocusNode = FocusNode();
+  final FocusNode confirmPasswordFocusNode = FocusNode();
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
@@ -86,34 +88,49 @@ class _LoginWidgetState extends State<LoginWidget> {
               Column(
                 children: [
                   TextFormField(
-                      decoration: InputDecoration(labelText: 'Correo'),
-                      onSaved: (value) => _authData.email = value ?? '',
-                      textInputAction: TextInputAction.next,
-                      validator: (value) => !(value != null &&
-                              value.contains('@') &&
-                              value.contains('.'))
-                          ? 'Correo invalido'
-                          : null),
+                    decoration: InputDecoration(labelText: 'Correo'),
+                    onSaved: (value) => _authData.email = value ?? '',
+                    textInputAction: _action == Action.forgotPassword
+                        ? TextInputAction.send
+                        : TextInputAction.next,
+                    validator: (value) => !(value != null &&
+                            value.contains('@') &&
+                            value.contains('.'))
+                        ? 'Correo invalido'
+                        : null,
+                    onFieldSubmitted: (_) => _action == Action.forgotPassword
+                        ? _submit()
+                        : FocusScope.of(context)
+                            .requestFocus(passwordFocusNode),
+                  ),
                   if (_action != Action.forgotPassword)
                     TextFormField(
-                      obscureText: !_showPswd,
-                      controller: _pswdController,
-                      decoration: InputDecoration(
-                          labelText: 'Contraseña',
-                          suffixIcon: EyeToggle(
-                              fn: () {
-                                setState(() {
-                                  _showPswd = !_showPswd;
-                                });
-                              },
-                              eyeState: _showPswd)),
-                      onSaved: (value) => _authData.password = value ?? '',
-                      textInputAction: _action == Action.login
-                          ? TextInputAction.send
-                          : TextInputAction.next,
-                    ),
+                        focusNode: passwordFocusNode,
+                        obscureText: !_showPswd,
+                        controller: _pswdController,
+                        decoration: InputDecoration(
+                            labelText: 'Contraseña',
+                            suffixIcon: EyeToggle(
+                                fn: () {
+                                  setState(() {
+                                    _showPswd = !_showPswd;
+                                  });
+                                },
+                                eyeState: _showPswd)),
+                        onSaved: (value) => _authData.password = value ?? '',
+                        textInputAction: _action == Action.login
+                            ? TextInputAction.send
+                            : TextInputAction.next,
+                        onFieldSubmitted: (_) => _action == Action.login
+                            ? _submit()
+                            : FocusScope.of(context)
+                                .requestFocus(confirmPasswordFocusNode),
+                        validator: (value) => value == null || value == ''
+                            ? 'Las contraseña no puede ser vacía'
+                            : null),
                   if (_action == Action.register)
                     TextFormField(
+                        focusNode: confirmPasswordFocusNode,
                         obscureText: !_showPswdConfirm,
                         decoration: InputDecoration(
                             labelText: 'Confirmar contraseña',
@@ -125,6 +142,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                                 },
                                 eyeState: _showPswdConfirm)),
                         textInputAction: TextInputAction.send,
+                        onFieldSubmitted: (_) => _submit(),
                         validator: (value) => value != _pswdController.text
                             ? 'Las contraseñas no cuadran'
                             : null),
@@ -134,7 +152,10 @@ class _LoginWidgetState extends State<LoginWidget> {
                 height: 20,
               ),
               _loading
-                  ? CircularProgressIndicator()
+                  ? SizedBox(
+                      width: 50,
+                      height: 50,
+                      child: Center(child: CircularProgressIndicator()))
                   : Column(
                       children: [
                         SizedBox(
@@ -147,7 +168,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                                     ? 'Iniciar sesión'
                                     : (_action == Action.register
                                         ? 'Crear Cuenta'
-                                        : 'Recuperar contraseña por correo'),
+                                        : 'Enviar correo'),
                                 style: TextStyle(
                                     color: Theme.of(context)
                                         .colorScheme
