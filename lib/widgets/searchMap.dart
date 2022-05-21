@@ -97,6 +97,9 @@ class _SearchMapState extends State<SearchMap> {
                           await Provider.of<RestaurantsProvider>(context,
                                   listen: false)
                               .setPosition(markerPos!);
+                          await Provider.of<AuthProvider>(context,
+                                  listen: false)
+                              .logPosition(markerPos!);
                           Provider.of<BottomNavigationProvider>(context,
                                   listen: false)
                               .currentIndex = 1;

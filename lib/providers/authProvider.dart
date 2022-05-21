@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:test_tyba/models/authInfo.dart';
 import 'package:test_tyba/models/user.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import "package:latlong/latlong.dart";
 
 /**
  * Provider in charge of all authentication features
@@ -101,5 +102,40 @@ class AuthProvider with ChangeNotifier {
         Duration(
             seconds: _user.expiryDate!.difference(DateTime.now()).inSeconds),
         () => logOut());
+  }
+
+  Future<bool> logPosition(LatLng pos) async {
+    try {
+      await FirebaseDatabase.instance
+          .reference()
+          .child('${_user.userId}/historial/latlngs')
+          .push()
+          .set({
+        'lat': pos.latitude,
+        'lng': pos.longitude,
+        'searchDate': DateTime.now().millisecondsSinceEpoch
+      });
+      notifyListeners();
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  Future<List<LatLng>> getSearchHistory() async {
+    List<LatLng> resp = [];
+    try {
+      DataSnapshot snapshot = await FirebaseDatabase.instance
+          .reference()
+          .child('${_user.userId}/historial/latlngs')
+          .orderByChild('searchDate')
+          .once();
+      snapshot.value.forEach((key, act) {
+        resp.add(LatLng(act['lat'], act['lng']));
+      });
+      return new List.from(resp.reversed);
+    } catch (err) {
+      return resp;
+    }
   }
 }
